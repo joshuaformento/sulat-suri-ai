@@ -1,0 +1,55 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+.env/
+.env.*  # For environment-specific dotenv files (e.g. .env.dev)
+
+# Python packaging
+*.egg-info/
+dist/
+build/
+
+# PyInstaller
+*.spec
+
+# Pipenv
+Pipfile.lock
+
+# Poetry
+poetry.lock
+
+# mypy / Pyright / Pylint / Pytest cache
+.mypy_cache/
+.pyright/
+.pytest_cache/
+.pyre/
+.cache/
+
+# VSCode settings
+.vscode/
+
+# PyCharm settings
+.idea/
+
+# Mac and system files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Coverage
+htmlcov/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+
+# FastAPI static/media upload folders (optional, customize if you use
