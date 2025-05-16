@@ -1,47 +1,61 @@
 from langchain_core.output_parsers import JsonOutputParser
 from langchain.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, create_model
 from core.config import settings
+from typing import Dict, Any
 
 
-class Grade(BaseModel):
+class DynamicGrade(BaseModel):
     essay_title: str = Field(description="The title of the essay")
-    grammar: int = Field(default=0, description="Grammar score")
-    coherence: int = Field(default=0, description="Coherence score")
-    relevance: int = Field(default=0, description="Relevance score")
+    explanation: str = Field(default="", description="Overall explanation of the grade")
     total_grade: int = Field(default=0, description="Total grade score over 100")
-    explanation: str = Field(default="", description="Explanation of the grade")
 
-class StudentGrades(BaseModel):
-    firstName: str = Field(description="The first name of the student.")
-    lastName: str = Field(description="The last name of the student.")
-    section: str = Field(description="The section of the student.")
-    grade: Grade = Field(
-        description="The detailed grading breakdown.",
-        default_factory=Grade
-    )
-
-async def grade_essay(document_text: str, coherence:str, grammar: str, relevance: str , reference:str) -> dict:
+async def grade_essay(document_text: str, rubriks: Dict[str, str], reference: str) -> dict:
     """
-    Grade the essay based on the given criteria
+    Grade the essay based on given dynamic criteria
 
     Args:
-        document_text(str) : Text of the document to be graded.
-        criteria(dict): The criteria that the grade of the essay will be based on.
+        document_text (str): Text of the document to be graded.
+        rubriks (Dict[str, str]): Dictionary containing custom grading criteria and their explanations.
+        reference (str): Reference text to compare against.
 
     Returns:
-        dict: The grade of the essay based on the criterias.
+        dict: The grade of the essay based on the custom criteria.
     """
     try:
-        # Initialize the language model with slightly more creativity to help parsing
+        # Create dynamic grade fields
+        grade_fields = {
+            key: (int, Field(default=0, description=f"Score for {key}"))
+            for key in rubriks.keys()
+        }
+        grade_fields.update({
+            "essay_title": (str, Field(description="The title of the essay")),
+            "explanation": (str, Field(default="", description="Overall explanation of the grade")),
+            "total_grade": (int, Field(default=0, description="Total grade score over 100"))
+        })
+        
+        DynamicGradeModel = create_model("DynamicGradeModel", **grade_fields)
+        
+        # Create the student grades model dynamically
+        DynamicStudentGrades = create_model(
+            "DynamicStudentGrades",
+            firstName=(str, Field(description="The first name of the student.")),
+            lastName=(str, Field(description="The last name of the student.")),
+            section=(str, Field(description="The section of the student.")),
+            grade=(DynamicGradeModel, Field(description="The detailed grading breakdown."))
+        )
+
+        # Initialize the language model
         llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.1, api_key=settings.OPENAI_API_KEY)
         
-        parser = JsonOutputParser(pydantic_object=StudentGrades)
+        parser = JsonOutputParser(pydantic_object=DynamicStudentGrades)
 
-       
-            
-        from langchain.prompts import ChatPromptTemplate
+        # Create the criteria section of the prompt dynamically
+        criteria_section = "\n".join([
+            f"{i+1}. **{key}**: {value}"
+            for i, (key, value) in enumerate(rubriks.items())
+        ])
 
         prompt = ChatPromptTemplate.from_template(
             """
@@ -60,20 +74,17 @@ async def grade_essay(document_text: str, coherence:str, grammar: str, relevance
 
             ## ✅ GRADING CRITERIA
 
-            Please evaluate the essay on the following dimensions. Provide both a score and a brief justification for each:
+            Please evaluate the essay on the following dimensions. For each criterion, provide a score out of 100 and a brief justification:
 
-            1. **Coherence** ({coherence}): Evaluate the clarity of ideas, organization, transitions between paragraphs, and the overall logical structure supporting the argument.
-            
-            2. **Grammar** ({grammar}): Analyze grammar usage, sentence construction, punctuation, spelling, and general technical correctness.
-            
-            3. **Relevance** ({relevance}): Assess how effectively the essay responds to the prompt and integrates key concepts or facts from the reference document.
+            {criteria_section}
 
             ## 🧠 EVALUATION GUIDELINES
 
-            - Cite specific examples from the essay to justify your scores.
-            - Be objective, fair, and consistent.
-            - Include suggestions for how the student can improve.
-            - Provide numerical scores based on the stated definitions and ranges.
+            - Cite specific examples from the essay to justify your scores
+            - Be objective, fair, and consistent
+            - Include suggestions for how the student can improve
+            - Provide numerical scores (0-100) for each criterion
+            - Calculate the total grade as an average of all criteria scores
 
             ## 📤 OUTPUT FORMAT
 
@@ -81,17 +92,16 @@ async def grade_essay(document_text: str, coherence:str, grammar: str, relevance
             """
         )
 
-
         # Create the processing chain
         chain = prompt | llm | parser
         
         # Invoke the chain with the content
-        result = await chain.ainvoke({"document_text": document_text, 
-                                      "coherence": coherence ,
-                                      "grammar": grammar,
-                                      "relevance": relevance,
-                                      "reference": reference,
-                                      "format_instructions": parser.get_format_instructions()})
+        result = await chain.ainvoke({
+            "document_text": document_text,
+            "reference": reference,
+            "criteria_section": criteria_section,
+            "format_instructions": parser.get_format_instructions()
+        })
     
         return result
     
