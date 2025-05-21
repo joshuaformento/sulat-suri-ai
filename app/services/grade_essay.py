@@ -74,17 +74,17 @@ async def grade_essay(document_text: str, rubriks: Dict[str, str], reference: st
 
             ## ✅ GRADING CRITERIA
 
-            Please evaluate the essay on the following dimensions. For each criterion, provide a score out of 100 and a brief justification:
+            Please evaluate the essay on the following dimensions. For each criterion, select ONLY from the grade bands explicitly mentioned in the rubric description for that criterion. Do not use any other scoring system. Justify your choice for each criterion.
 
             {criteria_section}
 
             ## 🧠 EVALUATION GUIDELINES
 
-            - Cite specific examples from the essay to justify your scores
+            - For each criterion, select ONLY from the provided rubric bands in the description (do not invent or use any other scores)
+            - Do not provide a numeric score; only output the rubric band for each criterion
+            - Cite specific examples from the essay to justify your band selection
             - Be objective, fair, and consistent
             - Include suggestions for how the student can improve
-            - Provide numerical scores (0-100) for each criterion
-            - Calculate the total grade as an average of all criteria scores
 
             ## 📤 OUTPUT FORMAT
 
