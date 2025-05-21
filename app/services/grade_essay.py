@@ -9,7 +9,7 @@ from typing import Dict, Any
 class DynamicGrade(BaseModel):
     essay_title: str = Field(description="The title of the essay")
     explanation: str = Field(default="", description="Overall explanation of the grade")
-    total_grade: int = Field(default=0, description="Total grade score over 100")
+    total_grade: int = Field(default=0, description="Total grade, which is the sum of all criterion scores")
 
 async def grade_essay(document_text: str, rubriks: Dict[str, str], reference: str) -> dict:
     """
@@ -32,7 +32,7 @@ async def grade_essay(document_text: str, rubriks: Dict[str, str], reference: st
         grade_fields.update({
             "essay_title": (str, Field(description="The title of the essay")),
             "explanation": (str, Field(default="", description="Overall explanation of the grade")),
-            "total_grade": (int, Field(default=0, description="Total grade score over 100"))
+            "total_grade": (int, Field(default=0, description="Total grade, which is the sum of all criterion scores"))
         })
         
         DynamicGradeModel = create_model("DynamicGradeModel", **grade_fields)
@@ -102,6 +102,13 @@ async def grade_essay(document_text: str, rubriks: Dict[str, str], reference: st
             "criteria_section": criteria_section,
             "format_instructions": parser.get_format_instructions()
         })
+        
+        # After you get the result from the chain
+        grades = result['grade']
+        # Exclude non-criterion fields
+        criterion_keys = [k for k in grades.keys() if k not in ("essay_title", "explanation", "total_grade")]
+        grades['total_grade'] = sum(grades[k] for k in criterion_keys)
+        result['grade'] = grades
     
         return result
     
