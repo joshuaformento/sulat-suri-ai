@@ -6,7 +6,7 @@ import uvicorn
 app = FastAPI(
     title="Essay AI API",
     description="API for essay analysis and processing",
-    version="1.0.0"
+    version="1.0.0" 
 )
 
 # Configure CORS
@@ -25,4 +25,4 @@ async def root():
 app.include_router(essay_router, prefix='/api/v1')
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True) 
