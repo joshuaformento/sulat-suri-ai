@@ -80,11 +80,20 @@ async def grade_essay(document_text: str, rubriks: Dict[str, str], reference: st
 
             ## 🧠 EVALUATION GUIDELINES
 
-            - For each criterion, select ONLY from the provided rubric bands in the description (do not invent or use any other scores)
-            - Do not provide a numeric score; only output the rubric band for each criterion
-            - Cite specific examples from the essay to justify your band selection
-            - Be objective, fair, and consistent
-            - Include suggestions for how the student can improve
+            - **Always highlight what the student did well before mentioning areas for improvement.**
+            - **Be empathetic, supportive, and encouraging** in your evaluation. Recognize and praise the student's efforts and progress, even if the essay isn't perfect.
+            - If the student's work shows **effort, intent, or partial understanding**, **assign the highest or second-highest band**. Default to higher bands unless the response is almost entirely missing or off-topic.
+            - **Only give the lowest score if the response is almost completely missing, off-topic, or shows no understanding at all.** If there is any reasonable attempt, do not assign the lowest band.
+            - If the essay is **understandable** and **attempts to answer the question**, **do not penalize minor mistakes** or imperfect organization. Focus on effort and content, not just perfection.
+            - **Be generous when in doubt** and align your grading with supportive teacher expectations.
+            - **When in doubt, choose the highest appropriate band.** If the work shows effort or partial understanding, do not hesitate to assign the top score.
+            - **If you assign less than the highest band for any criterion, clearly explain why the highest band was not given, and ensure the reason is significant (e.g., major misunderstanding or missing content).**
+            - For each criterion, **select ONLY from the provided rubric bands** (do not invent or use any other scores). Stick strictly to the rubric to ensure consistency.
+            - Do **not provide a numeric score**; **only output the rubric band** for each criterion. Focus on qualitative assessment.
+            - **Cite specific examples** from the essay to justify your band selection, but always frame feedback positively and constructively.
+            - **If the overall work shows effort, even if imperfect, favor the higher bands.**
+            - **Be fair and consistent** in applying the rubric, but always encourage growth and acknowledge progress.
+            - **Frame all suggestions for improvement in a positive, growth-oriented way.** Avoid negative or discouraging language.
 
             ## 📤 OUTPUT FORMAT
 
@@ -92,7 +101,7 @@ async def grade_essay(document_text: str, rubriks: Dict[str, str], reference: st
             """
         )
 
-        # Create the processing chain
+        # Create the processing chain   
         chain = prompt | llm | parser
         
         # Invoke the chain with the content
