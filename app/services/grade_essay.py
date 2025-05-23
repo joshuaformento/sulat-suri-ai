@@ -11,14 +11,13 @@ class DynamicGrade(BaseModel):
     explanation: str = Field(default="", description="Overall explanation of the grade")
     total_grade: int = Field(default=0, description="Total grade, which is the sum of all criterion scores")
 
-async def grade_essay(document_text: str, rubriks: Dict[str, str], reference: str) -> dict:
+async def grade_essay(document_text: str, rubriks: Dict[str, str]) -> dict:
     """
     Grade the essay based on given dynamic criteria
 
     Args:
         document_text (str): Text of the document to be graded.
         rubriks (Dict[str, str]): Dictionary containing custom grading criteria and their explanations.
-        reference (str): Reference text to compare against.
 
     Returns:
         dict: The grade of the essay based on the custom criteria.
@@ -61,16 +60,12 @@ async def grade_essay(document_text: str, rubriks: Dict[str, str], reference: st
             """
             # 📝 ESSAY GRADING ASSISTANT
 
-            You are an expert academic evaluator. Your role is to objectively and constructively assess a student's essay using the criteria below. Your feedback should be detailed, actionable, and backed by specific references to the essay and provided materials.
+            You are an expert academic evaluator. Your role is to objectively and constructively assess a student's essay using the criteria below. Your feedback should be detailed, actionable, and backed by specific references to the essay.
 
             ## 📄 ESSAY TO EVALUATE
             ```
             {document_text}
             ```
-
-            ## 📚 REFERENCE MATERIAL
-            Use the following reference to assess the essay's relevance:
-            {reference}
 
             ## ✅ GRADING CRITERIA
 
@@ -98,7 +93,6 @@ async def grade_essay(document_text: str, rubriks: Dict[str, str], reference: st
         # Invoke the chain with the content
         result = await chain.ainvoke({
             "document_text": document_text,
-            "reference": reference,
             "criteria_section": criteria_section,
             "format_instructions": parser.get_format_instructions()
         })
