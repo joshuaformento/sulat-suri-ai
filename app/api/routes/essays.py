@@ -11,8 +11,7 @@ router = APIRouter(prefix="/essays", tags=["essays"])
 @router.post("/")
 async def create_essay(
     essays: List[UploadFile],
-    rubrics: str = Form(...),
-    reference: UploadFile = File(...)
+    rubrics: str = Form(...)
 ):
     try:
         rubrics_dict = json.loads(rubrics)
@@ -27,9 +26,6 @@ async def create_essay(
         )
     
     try:
-        reference_filepath = await save_uploaded_file(reference)
-        reference_content = await load_document(reference_filepath)
-        
         grades = []
         for file in essays:
             if not file.filename.endswith(('.pdf', '.docx', '.txt')):
@@ -41,8 +37,7 @@ async def create_essay(
             
             grade = await grade_essay(
                 document_text=text_content,
-                rubriks=rubrics_dict,
-                reference=reference_content
+                rubriks=rubrics_dict
             )
             
             print('Grade:', grade)
